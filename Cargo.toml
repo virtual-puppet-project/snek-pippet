@@ -10,6 +10,7 @@ name = "pipper"
 crate-type = ["cdylib"]
 
 [dependencies]
+nokhwa = { version = "0.10.4", features = ["input-native"] }
 pyo3 = { version = "0.18.3", features = ["extension-module"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"

@@ -1,3 +1,5 @@
+mod camera;
+
 use std::net::{Ipv4Addr, SocketAddrV4, UdpSocket};
 
 use pyo3::prelude::*;
@@ -79,8 +81,13 @@ impl Broadcaster {
 }
 
 #[pymodule]
-fn pipper(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
+fn pipper(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<Broadcaster>()?;
+
+    let camera_module = PyModule::new(py, camera::MODULE_NAME)?;
+    camera::init(camera_module)?;
+
+    m.add_submodule(camera_module)?;
 
     Ok(())
 }
