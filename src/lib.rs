@@ -33,7 +33,6 @@ struct Landmark {
     presence: f32,
 }
 
-#[pyclass]
 #[derive(Serialize)]
 struct WireData {
     landmarks: Vec<Landmark>,
