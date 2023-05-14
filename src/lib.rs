@@ -3,25 +3,31 @@ use std::net::{Ipv4Addr, SocketAddrV4, UdpSocket};
 use pyo3::prelude::*;
 use serde::Serialize;
 
+// TODO will need to figure out head translation/rotation from https://github.com/google/mediapipe/blob/master/mediapipe/tasks/python/vision/face_landmarker.py#L250
+
+#[allow(dead_code)]
 #[pyclass]
 #[derive(FromPyObject, Serialize)]
 struct Category {
+    #[serde(skip_serializing)]
     index: u16,
     score: f32,
+    #[serde(skip_serializing)]
     display_name: String,
+    #[serde(rename = "name")]
     category_name: String,
 }
 
-#[pymethods]
-impl Category {}
-
+#[allow(dead_code)]
 #[pyclass]
 #[derive(FromPyObject, Serialize)]
 struct Landmark {
     x: f32,
     y: f32,
     z: f32,
+    #[serde(skip_serializing)]
     visibility: f32,
+    #[serde(skip_serializing)]
     presence: f32,
 }
 
