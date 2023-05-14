@@ -27,7 +27,7 @@ def start(port: int) -> None:
 
     broadcaster = pipper.Broadcaster(port)
 
-    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+    cap = cv2.VideoCapture(0)
     print("Using backend: {}".format(cap.getBackendName()), flush=True)
     if not cap.isOpened():
         print("Cannot open camera")

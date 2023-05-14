@@ -3,7 +3,7 @@ mod camera;
 use std::net::{Ipv4Addr, SocketAddrV4, UdpSocket};
 
 use pyo3::prelude::*;
-use serde::Serialize;
+use serde::{ser::SerializeSeq, Serialize};
 
 // TODO will need to figure out head translation/rotation from https://github.com/google/mediapipe/blob/master/mediapipe/tasks/python/vision/face_landmarker.py#L250
 
@@ -34,6 +34,21 @@ struct Landmark {
 }
 
 #[derive(Serialize)]
+struct Vector3<T> {
+    x: T,
+    y: T,
+    z: T,
+}
+
+#[derive(Serialize)]
+enum HeadMovement {
+    #[serde(rename = "translation")]
+    Translation(Vector3<f32>),
+    #[serde(rename = "rotation")]
+    Rotation(Vector3<f32>),
+}
+
+#[derive(Serialize)]
 struct WireData {
     landmarks: Vec<Landmark>,
     blendshapes: Vec<Category>,
@@ -41,6 +56,8 @@ struct WireData {
 
 impl From<(Vec<Landmark>, Vec<Category>)> for WireData {
     fn from(value: (Vec<Landmark>, Vec<Category>)) -> Self {
+        // TODO calculate translation/rotation here
+
         WireData {
             landmarks: value.0,
             blendshapes: value.1,
