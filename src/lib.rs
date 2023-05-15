@@ -8,7 +8,6 @@ use serde::{ser::SerializeSeq, Serialize};
 // TODO will need to figure out head translation/rotation from https://github.com/google/mediapipe/blob/master/mediapipe/tasks/python/vision/face_landmarker.py#L250
 
 #[allow(dead_code)]
-#[pyclass]
 #[derive(FromPyObject, Serialize)]
 struct Category {
     #[serde(skip_serializing)]
@@ -20,46 +19,82 @@ struct Category {
     category_name: String,
 }
 
-#[allow(dead_code)]
-#[pyclass]
-#[derive(FromPyObject, Serialize)]
-struct Landmark {
+#[derive(FromPyObject)]
+struct PyTransformationMatrix(Vec<Vec<f32>>);
+
+struct Vector4 {
     x: f32,
     y: f32,
     z: f32,
-    #[serde(skip_serializing)]
-    visibility: f32,
-    #[serde(skip_serializing)]
-    presence: f32,
+    w: f32,
+}
+
+impl Serialize for Vector4 {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let mut s = serializer.serialize_seq(Some(4))?;
+        s.serialize_element(&self.x)?;
+        s.serialize_element(&self.y)?;
+        s.serialize_element(&self.z)?;
+        s.serialize_element(&self.w)?;
+
+        s.end()
+    }
 }
 
 #[derive(Serialize)]
-struct Vector3<T> {
-    x: T,
-    y: T,
-    z: T,
+struct TransformationMatrix {
+    x: Vector4,
+    y: Vector4,
+    z: Vector4,
+    w: Vector4,
 }
 
-#[derive(Serialize)]
-enum HeadMovement {
-    #[serde(rename = "translation")]
-    Translation(Vector3<f32>),
-    #[serde(rename = "rotation")]
-    Rotation(Vector3<f32>),
+impl From<PyTransformationMatrix> for TransformationMatrix {
+    fn from(value: PyTransformationMatrix) -> Self {
+        let value = value.0;
+        Self {
+            x: Vector4 {
+                x: value[0][0],
+                y: value[0][1],
+                z: value[0][2],
+                w: value[0][3],
+            },
+            y: Vector4 {
+                x: value[1][0],
+                y: value[1][1],
+                z: value[1][2],
+                w: value[1][3],
+            },
+            z: Vector4 {
+                x: value[2][0],
+                y: value[2][1],
+                z: value[2][2],
+                w: value[2][3],
+            },
+            w: Vector4 {
+                x: value[3][0],
+                y: value[3][1],
+                z: value[3][2],
+                w: value[3][3],
+            },
+        }
+    }
 }
 
 #[derive(Serialize)]
 struct WireData {
-    landmarks: Vec<Landmark>,
+    #[serde(flatten)]
+    transformation_matrix: TransformationMatrix,
     blendshapes: Vec<Category>,
 }
 
-impl From<(Vec<Landmark>, Vec<Category>)> for WireData {
-    fn from(value: (Vec<Landmark>, Vec<Category>)) -> Self {
-        // TODO calculate translation/rotation here
-
+impl From<(PyTransformationMatrix, Vec<Category>)> for WireData {
+    fn from(value: (PyTransformationMatrix, Vec<Category>)) -> Self {
         WireData {
-            landmarks: value.0,
+            transformation_matrix: TransformationMatrix::from(value.0),
             blendshapes: value.1,
         }
     }
@@ -86,9 +121,9 @@ impl Broadcaster {
         }
     }
 
-    fn send(&self, landmarks: Vec<Landmark>, blendshapes: Vec<Category>) {
+    fn send(&self, transformation_matrix: PyTransformationMatrix, blendshapes: Vec<Category>) {
         let _ = self.socket.send_to(
-            serde_json::to_string(&WireData::from((landmarks, blendshapes)))
+            serde_json::to_string(&WireData::from((transformation_matrix, blendshapes)))
                 .unwrap_or_default()
                 .as_bytes(),
             self.target,
