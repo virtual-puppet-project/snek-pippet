@@ -105,6 +105,7 @@ if __name__ == "__main__":
         if args.use_python:
             print("Unable to check for cameras in python-only mode")
             exit(1)
+        import pipper
 
         print(json.dumps(pipper.camera.list_cameras(), indent=2))
         exit(0)

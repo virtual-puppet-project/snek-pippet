@@ -3,7 +3,7 @@ mod camera;
 use std::net::{Ipv4Addr, SocketAddrV4, UdpSocket};
 
 use pyo3::prelude::*;
-use serde::{ser::SerializeSeq, Serialize};
+use serde::Serialize;
 
 // TODO will need to figure out head translation/rotation from https://github.com/google/mediapipe/blob/master/mediapipe/tasks/python/vision/face_landmarker.py#L250
 
@@ -22,27 +22,8 @@ struct Category {
 #[derive(FromPyObject)]
 struct PyTransformationMatrix(Vec<Vec<f32>>);
 
-struct Vector4 {
-    x: f32,
-    y: f32,
-    z: f32,
-    w: f32,
-}
-
-impl Serialize for Vector4 {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        let mut s = serializer.serialize_seq(Some(4))?;
-        s.serialize_element(&self.x)?;
-        s.serialize_element(&self.y)?;
-        s.serialize_element(&self.z)?;
-        s.serialize_element(&self.w)?;
-
-        s.end()
-    }
-}
+#[derive(Serialize)]
+struct Vector4(Vec<f32>);
 
 #[derive(Serialize)]
 struct TransformationMatrix {
@@ -56,30 +37,10 @@ impl From<PyTransformationMatrix> for TransformationMatrix {
     fn from(value: PyTransformationMatrix) -> Self {
         let value = value.0;
         Self {
-            x: Vector4 {
-                x: value[0][0],
-                y: value[0][1],
-                z: value[0][2],
-                w: value[0][3],
-            },
-            y: Vector4 {
-                x: value[1][0],
-                y: value[1][1],
-                z: value[1][2],
-                w: value[1][3],
-            },
-            z: Vector4 {
-                x: value[2][0],
-                y: value[2][1],
-                z: value[2][2],
-                w: value[2][3],
-            },
-            w: Vector4 {
-                x: value[3][0],
-                y: value[3][1],
-                z: value[3][2],
-                w: value[3][3],
-            },
+            x: Vector4(value[0].clone()),
+            y: Vector4(value[1].clone()),
+            z: Vector4(value[2].clone()),
+            w: Vector4(value[3].clone()),
         }
     }
 }

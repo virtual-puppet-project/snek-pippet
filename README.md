@@ -16,8 +16,8 @@ Python 3.9+ and Rust 1.69.0+ are required.
     * Windows: `source venv/Scripts/activate`
 3. Install dependencies: `pip install requirements.txt`
 4. Build the PyO3 library:
-    * Development: `maturin develop`
-    * Release: `maturin build`
+    * Development: `maturin develop --release`
+    * Release: `maturin build --release`
 5. Download the mediapipe model file: `curl -o models/face_landmarker.task https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task`
 6. Run the tracker: `python snek-pippet/snek_pippet.py`
 
